@@ -1,0 +1,14 @@
+{
+  "name": "node_organizer24",
+  "version": "0.0.1",
+  "description": "Server, which have connections between all users from one organization",
+  "dependencies": {
+    "coffee-script": "latest",
+    "express": "latest",
+    "jade": "latest",
+    "pg": "latest",
+    "redis": "latest",
+    "socket.io": "latest",
+    "underscore":"latest"
+  }
+}
