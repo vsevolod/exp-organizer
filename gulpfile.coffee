@@ -10,11 +10,11 @@ options = {
 }
 
 gulp.task 'server:restart', ->
-  gulp.src './app/*.coffee'
+  gulp.src './app/**/*.coffee'
     .pipe do coffee
     .pipe gulp.dest('./public')
     .pipe server(options)
     .pipe do livereload
 
 gulp.task 'default', ['server:restart'], ->
-  gulp.watch './app/*.coffee', ['server:restart']
+  gulp.watch './app/**/*.coffee', ['server:restart']

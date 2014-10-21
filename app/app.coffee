@@ -1,44 +1,11 @@
 app = require('express')()
 http = require('http').Server(app)
 io = require('socket.io')(http)
-_ = require('underscore')
-#pg = require('pg')
-#redis = require("redis")
-#client = redis.createClient()
-#
-#constring = "postgresql://vsevolod:vsevoloddb@127.0.0.1/organizer24_20141006"
-#send_sql = (sql) ->
-#  pg.connect constring, (err, client, done) ->
-#    throw err if (err)
-#    client.query sql, (err, res) ->
-#      done()
-#      throw err if (err)
-#      console.log( res.rows[0] )
-#send_sql('SELECT count(*) from appointments;')
+_ = require 'underscore'
+
+require './models/client'
 
 current_clients = []
-class Client
-  constructor: (client_options, @socket) ->
-    @worker_id = client_options.worker_id
-    @organization_id = client_options.organization_id
-    @user = client_options.user
-    @is_admin = client_options.isa
-    @socket.join(@.room())
-
-  room: (postfix) ->
-    "#{@organization_id}_#{@worker_id}_#{postfix || @is_admin}"
-
-  fio: () ->
-    "#{@user.firstname} #{@user.lastname}"
-
-  remove: () ->
-    delete @worker_id
-    delete @user
-    @socket = null
-
-  equal: (other_client) ->
-    other_client && @user && other_client.user && other_client.user.id == @user.id && other_client.worker_id == @user.id
-
 io.sockets.on 'connection', (socket) ->
 
   socket.on 'join', (client_options) ->
@@ -50,6 +17,7 @@ io.sockets.on 'connection', (socket) ->
       delete socket.current_client
       socket.current_client = old_client
     else
+      socket.broadcast.of(socket.current_client.room(true)).emit('message', socket.current_client.fio(), 'connected!')
       current_clients.push(socket.current_client)
 
   socket.on 'set worker', (worker_id) ->
@@ -63,8 +31,8 @@ io.sockets.on 'connection', (socket) ->
       current_client.equal(socket.current_client)
 
   socket.on 'refresh event', (appointment_id)->
-    socket.broadcast.to(socket.current_client.room(false)).emit('refresh_event', appointment_id)
-    socket.broadcast.to(socket.current_client.room(true)).emit('refresh_event', appointment_id)
+    socket.broadcast.of(socket.current_client.organization_id).to(socket.current_client.room(false)).emit('refresh_event', appointment_id)
+    socket.broadcast.of(socket.current_client.organization_id).to(socket.current_client.room(true)).emit('refresh_event', appointment_id)
 
 
 http.listen 8000, ->
