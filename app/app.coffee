@@ -3,7 +3,7 @@ http = require('http').Server(app)
 io = require('socket.io')(http)
 _ = require 'underscore'
 
-require './models/client'
+{Client} = require './models/client'
 
 current_clients = []
 io.sockets.on 'connection', (socket) ->
@@ -17,12 +17,12 @@ io.sockets.on 'connection', (socket) ->
       delete socket.current_client
       socket.current_client = old_client
     else
-      socket.broadcast.of(socket.current_client.room(true)).emit('message', socket.current_client.fio(), 'connected!')
       current_clients.push(socket.current_client)
 
   socket.on 'set worker', (worker_id) ->
+    socket.current_client.leave_rooms()
     socket.current_client.worker_id = worker_id
-    socket.join(socket.current_client.room())
+    socket.current_client.join_rooms()
 
   socket.on 'disconnect', () ->
     if socket.current_client
