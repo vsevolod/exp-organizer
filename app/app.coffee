@@ -1,11 +1,20 @@
 app = require('express')()
+logger = require 'morgan'
 http = require('http').Server(app)
 io = require('socket.io')(http)
 _ = require 'underscore'
 
+# include other libraties
 {Client} = require './models/client'
 
+# configure
+app.use(logger('dev'))
+redis = require 'socket.io-redis'
+io.adapter redis({host: 'localhost', port: 6379})
+
 current_clients = []
+
+# Socket.IO
 io.sockets.on 'connection', (socket) ->
 
   socket.on 'join', (client_options) ->
@@ -30,9 +39,7 @@ io.sockets.on 'connection', (socket) ->
     current_clients = _.reject current_clients, (current_client) ->
       current_client.equal(socket.current_client)
 
-  socket.on 'refresh event', (appointment_id)->
-    socket.broadcast.of(socket.current_client.organization_id).to(socket.current_client.room(false)).emit('refresh_event', appointment_id)
-    socket.broadcast.of(socket.current_client.organization_id).to(socket.current_client.room(true)).emit('refresh_event', appointment_id)
+  #socket.broadcast.of(socket.current_client.organization_id).to(socket.current_client.room(true)).emit('refresh_event', appointment_id)
 
 
 http.listen 8000, ->

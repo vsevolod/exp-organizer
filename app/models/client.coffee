@@ -1,5 +1,3 @@
-#_ = require 'underscore'
-
 exports.Client =
 class Client
   constructor: (client_options, @socket) ->
