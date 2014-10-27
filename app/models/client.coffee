@@ -4,6 +4,7 @@ class Client
     {@worker_id, @organization_id, @user, @isa} = client_options
     @is_admin = @isa
     @join_rooms()
+    @phone = @user.phone
 
   room: (postfix) ->
     "#{@worker_id}_#{postfix || @is_admin}"
@@ -17,14 +18,14 @@ class Client
     @socket = null
 
   join_rooms: () ->
-    @socket.join room for room in [@organization_room(), @worker_room(), @admin_room(), @worker_admin_room()]
+    @socket.join room for room in [@phone, @organization_room(), @worker_room(), @admin_room(), @worker_admin_room()]
 
   leave_rooms: () ->
-    @socket.leave room for room in [@organization_room(), @worker_room(), @admin_room(), @worker_admin_room()]
+    @socket.leave room for room in [@phone, @organization_room(), @worker_room(), @admin_room(), @worker_admin_room()]
 
   organization_room: (organization)->
     "Organization::#{organization || @organization_id}"
-    
+
   worker_room: (worker) ->
     "#{@organization_room()}Worker::#{worker || @worker_id}"
 

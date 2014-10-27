@@ -3,14 +3,15 @@ logger = require 'morgan'
 http = require('http').Server(app)
 io = require('socket.io')(http)
 _ = require 'underscore'
+redis_client = require('redis').createClient()
 
 # include other libraties
 {Client} = require './models/client'
 
 # configure
 app.use(logger('dev'))
-redis = require 'socket.io-redis'
-io.adapter redis({host: 'localhost', port: 6379})
+io_redis = require 'socket.io-redis'
+io.adapter io_redis({host: 'localhost', port: 6379})
 
 current_clients = []
 
@@ -27,8 +28,10 @@ io.sockets.on 'connection', (socket) ->
       socket.current_client = old_client
     else
       current_clients.push(socket.current_client)
+      redis_client.set('phones', socket.current_client.phone)
 
   socket.on 'set worker', (worker_id) ->
+    console.log(socket.current_client.fio(), 'change worker')
     socket.current_client.leave_rooms()
     socket.current_client.worker_id = worker_id
     socket.current_client.join_rooms()
