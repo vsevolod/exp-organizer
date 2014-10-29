@@ -3,8 +3,8 @@ class Client
   constructor: (client_options, @socket) ->
     {@worker_id, @organization_id, @user, @isa} = client_options
     @is_admin = @isa
-    @join_rooms()
     @phone = @user.phone
+    @join_rooms()
 
   room: (postfix) ->
     "#{@worker_id}_#{postfix || @is_admin}"
@@ -37,3 +37,6 @@ class Client
 
   equal: (other_client) ->
     other_client && @user && other_client.user && other_client.user.id == @user.id && other_client.worker_id == @user.id
+
+  log: (options) ->
+    console.log(do @fio, options)

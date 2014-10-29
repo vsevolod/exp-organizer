@@ -3,7 +3,8 @@ logger = require 'morgan'
 http = require('http').Server(app)
 io = require('socket.io')(http)
 _ = require 'underscore'
-redis_client = require('redis').createClient()
+redis = require('socket.io-redis/node_modules/redis')
+redis_client = redis.createClient()
 
 # include other libraties
 {Client} = require './models/client'
@@ -12,6 +13,7 @@ redis_client = require('redis').createClient()
 app.use(logger('dev'))
 io_redis = require 'socket.io-redis'
 io.adapter io_redis({host: 'localhost', port: 6379})
+redis_client.del('phones')
 
 current_clients = []
 
@@ -28,17 +30,20 @@ io.sockets.on 'connection', (socket) ->
       socket.current_client = old_client
     else
       current_clients.push(socket.current_client)
-      redis_client.set('phones', socket.current_client.phone)
+      socket.current_client.log 'connected'
+      console.log('---------------', socket.current_client.phone, '-------------')
+      redis_client.hset('phones', socket.current_client.phone, '1', redis.print)
 
   socket.on 'set worker', (worker_id) ->
-    console.log(socket.current_client.fio(), 'change worker')
+    socket.current_client.log 'change worker'
     socket.current_client.leave_rooms()
     socket.current_client.worker_id = worker_id
     socket.current_client.join_rooms()
 
   socket.on 'disconnect', () ->
     if socket.current_client
-      console.log(socket.current_client.fio(), 'disconnected')
+      socket.current_client.log 'disconnect'
+      redis_client.hdel('phones', socket.current_client.phone, redis.print)
     current_clients = _.reject current_clients, (current_client) ->
       current_client.equal(socket.current_client)
 
